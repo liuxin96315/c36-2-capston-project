@@ -1,0 +1,78 @@
+import matplotlib.pyplot as plt
+import xgboost
+import xgboost as xgb
+import statistics
+# First XGBoost model for Pima Indians dataset
+from numpy import loadtxt
+from xgboost.sklearn import XGBRegressor
+import numpy as np
+from sklearn.model_selection import train_test_split,cross_validate
+
+from sklearn import  metrics
+from sklearn.model_selection import GridSearchCV  
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+
+
+from google.colab import drive
+import pandas as pd
+import csv
+# connect drive
+drive.mount('/content/drive')
+
+
+
+# load data
+dataset_tr = pd.read_csv('/content/drive/My Drive/capstone/data/part_zone_3month.csv')
+dataset_te = pd.read_csv('/content/drive/My Drive/capstone/data/2019_combine.csv')
+
+train=dataset_tr.sample(frac=1.0)
+test=dataset_te.sample(frac=1.0)
+
+x_train=train.loc[:,['month','day','hour','minute','weekday','LocationID','longitude','latitude']]
+y_train=train.loc[:,['15_demand']]
+x_test=test.loc[:,['month','day','hour','minute','weekday','LocationID','longitude','latitude']]
+y_test=test.loc[:,['15_demand']]
+
+
+model = xgb.XGBRegressor(objective= 'reg:linear', 
+                        learning_rate= 0.4, #35//2.85
+                        max_depth= 19, 
+                        min_child_weight=7, 
+                        gamma=1, 
+                        n_estimators=3, #4
+                        subsample=0.5, 
+                        colsample_bytree=1
+                        )
+
+
+# fit model no training data
+model.fit(x_train, y_train)
+
+# make predictions for test data
+y_pred = model.predict(x_test)
+y_t=[v for v in y_test['15_demand']]  
+
+
+mae = mean_absolute_error(y_t, y_pred)
+print('Test Mean Absolute Error: %.2f' % (mae))
+
+mse = mean_squared_error(y_t, y_pred)
+print("Test Mean Square Error: %f" % (mse))
+
+
+plt.plot(range(100),y_pred[0:100], c='r')
+plt.plot(range(100),y_t[0:100], c='g')
+plt.show()
+
+
+#feature importance
+import matplotlib.pyplot as plt
+xgb.plot_importance(model)
+plt.rcParams['figure.figsize'] = [50, 10]
+plt.show()
+
+
+
